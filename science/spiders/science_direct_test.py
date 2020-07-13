@@ -7,8 +7,11 @@ from ..items import ScienceItem
 class QuoteSpider(scrapy.Spider):
     name = 'sciencedirect'
     try:
-        with open("volume_list.txt", "rt") as f:
-            start_urls = [url.strip() for url in f.readlines()]
+        with open("volume_list.json", "r") as f:
+            urls_data = json.load(f)
+        start_urls = []
+        for volume_url in urls_data:
+            start_urls.append(volume_url['volume_list'])
     except:
         print('no volume list')
 
