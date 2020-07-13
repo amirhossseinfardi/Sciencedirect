@@ -7,8 +7,6 @@ import json
 
 class GetvolumelistSpider(scrapy.Spider):
     name = 'getvolumelist'
-
-    url = 'https://www.sciencedirect.com/journal/progress-in-aerospace-sciences/issues'
     start_urls = []
     issbn = '03760421'
     start_year = 1997
