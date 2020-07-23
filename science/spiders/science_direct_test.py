@@ -15,6 +15,8 @@ class QuoteSpider(scrapy.Spider):
     except:
         print('no volume list')
 
+    # start_urls = ['https://www.sciencedirect.com/journal/journal-of-alloys-and-compounds/vol/827/suppl/C']
+
     def parse(self, response):
         items = ScienceItem()
         all_article_list = response.css('dt')[1:]
@@ -24,6 +26,9 @@ class QuoteSpider(scrapy.Spider):
             items['article_name'] = article_name
             items['article_link'] = 'https://www.sciencedirect.com' + article_link
             yield items
-        # yield {
-        #         'key': keyword_test
-        # }
+        # check for next page
+        next_page = response.xpath('/html/head/link[1]/@rel').extract()
+        if next_page and next_page[0] == 'next':
+            print("im am in next page")
+            next_page_url = response.xpath('/html/head/link[1]/@href').extract()[0]
+            yield scrapy.Request(url=next_page_url, callback=self.parse)
