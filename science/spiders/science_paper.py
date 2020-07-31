@@ -64,7 +64,7 @@ class QuoteSpider(scrapy.Spider):
         items = ScienceItem()
         global counting
         counting = counting + 1
-
+        download_article = False
         # article index
         items['article_index'] = str(counting)
 
@@ -102,54 +102,59 @@ class QuoteSpider(scrapy.Spider):
         items['article_keyword'] = article_keyword
 
         # article authors
-        works = Works()
-        artdoi = article_doi
-        article_author_temp = works.doi(artdoi)
-        article_authors = [article_author_temp['author'][x]['given'] + " " + article_author_temp['author'][x]['family']
-                           for x in range(len(article_author_temp['author']))]
-        items['article_authors'] = article_authors
-
-        # article country
-        raw_html_json = response.xpath("//script[@type='application/json']/text()").extract()[0]
-        article_json = json.loads(raw_html_json)
-        article_country = []
-        for item in find_in_obj(article_json, 'country'):
-            country_temp = item
-            country_temp[-1] = '_'
-            article_country.append(getFromDict(article_json, country_temp))
-        items['article_country'] = article_country
-        article_organization = []
-        for item in find_in_obj(article_json, 'organization'):
-            organization_temp = item
-            organization_temp[-1] = '_'
-            article_organization.append(getFromDict(article_json, organization_temp))
-        items['article_organization'] = article_organization
-
-        # download article
         try:
-            file_temp_address = 'paper_download'
-            sci = SciHub(article_doi, file_temp_address).download(choose_scihub_url_index=3)
-            arr = os.listdir(file_temp_address)
-            # os.chdir('..')
-            # os.chdir('..')
-            current_dir = os.getcwd().replace('\\', '/')
-            oldfile = current_dir + '/' + file_temp_address + '/' + arr[0]
-            newfile = current_dir + '/' + file_temp_address + '/' + str(counting) + '-' + article_name + '.pdf'
-            os.rename(oldfile, newfile)
-            #
-            path = journal_name + '/' + article_date_temp[-1] + '/' + article_volume
-            #
-            if not os.path.exists(path):
-                os.makedirs(path)
-                print("Directory ", path, " Created ")
-            else:
-                print("Directory ", path, " already exists")
-            files = os.listdir(file_temp_address)
-            for f in files:
-                shutil.move(file_temp_address + '/' + f, path)
+            works = Works()
+            artdoi = article_doi
+            article_author_temp = works.doi(artdoi)
+            article_authors = [article_author_temp['author'][x]['given'] + " " + article_author_temp['author'][x]['family']
+                               for x in range(len(article_author_temp['author']))]
+            items['article_authors'] = article_authors
         except:
-            print('paper no available')
-            items['download_fail'] = 'not downloaded'
+            pass
+        # article country
+        try:
+            raw_html_json = response.xpath("//script[@type='application/json']/text()").extract()[0]
+            article_json = json.loads(raw_html_json)
+            article_country = []
+            for item in find_in_obj(article_json, 'country'):
+                country_temp = item
+                country_temp[-1] = '_'
+                article_country.append(getFromDict(article_json, country_temp))
+            items['article_country'] = article_country
+            article_organization = []
+            for item in find_in_obj(article_json, 'organization'):
+                organization_temp = item
+                organization_temp[-1] = '_'
+                article_organization.append(getFromDict(article_json, organization_temp))
+            items['article_organization'] = article_organization
+        except:
+            pass
+        # download article
+        if download_article:
+            try:
+                file_temp_address = 'paper_download'
+                sci = SciHub(article_doi, file_temp_address).download(choose_scihub_url_index=3)
+                arr = os.listdir(file_temp_address)
+                # os.chdir('..')
+                # os.chdir('..')
+                current_dir = os.getcwd().replace('\\', '/')
+                oldfile = current_dir + '/' + file_temp_address + '/' + arr[0]
+                newfile = current_dir + '/' + file_temp_address + '/' + str(counting) + '-' + article_name + '.pdf'
+                os.rename(oldfile, newfile)
+                #
+                path = journal_name + '/' + article_date_temp[-1] + '/' + article_volume
+                #
+                if not os.path.exists(path):
+                    os.makedirs(path)
+                    print("Directory ", path, " Created ")
+                else:
+                    print("Directory ", path, " already exists")
+                files = os.listdir(file_temp_address)
+                for f in files:
+                    shutil.move(file_temp_address + '/' + f, path)
+            except:
+                print('paper no available')
+                items['download_fail'] = 'not downloaded'
 
         # yielding items
         yield items
