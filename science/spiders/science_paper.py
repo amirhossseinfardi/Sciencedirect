@@ -167,6 +167,8 @@ class QuoteSpider(scrapy.Spider):
             except:
                 print('paper no available')
                 items['download_fail'] = 'not downloaded'
+        # save article link for remove duplicated
+        items['article_link'] = response.request.url
 
         # yielding items
         yield items
