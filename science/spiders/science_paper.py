@@ -100,17 +100,29 @@ class QuoteSpider(scrapy.Spider):
         # article keyword
         article_keyword = response.css('.keyword span::text').extract()
         items['article_keyword'] = article_keyword
-
+        article_authors = []
         # article authors
+        # try:
+        #     works = Works()
+        #     artdoi = article_doi
+        #     article_author_temp = works.doi(artdoi)
+        #     article_authors = [article_author_temp['author'][x]['given'] + " " +
+        #     article_author_temp['author'][x]['family']
+        #                        for x in range(len(article_author_temp['author']))]
+        #     items['article_authors'] = article_authors
+        # except:
+        #     pass
         try:
-            works = Works()
-            artdoi = article_doi
-            article_author_temp = works.doi(artdoi)
-            article_authors = [article_author_temp['author'][x]['given'] + " " + article_author_temp['author'][x]['family']
-                               for x in range(len(article_author_temp['author']))]
+            xxx = response.css('.given-name::text').extract()
+            author_numbers = len(xxx)
+            for counter in range(author_numbers):
+                list_of_author = response.xpath('//*[@id="author-group"]/a[{}]'.format(counter+1))
+                article_author_part = list_of_author.css('.text::text').extract()
+                article_authors.append(' '.join([str(elem) for elem in article_author_part]))
             items['article_authors'] = article_authors
         except:
             pass
+
         # article country
         try:
             raw_html_json = response.xpath("//script[@type='application/json']/text()").extract()[0]
